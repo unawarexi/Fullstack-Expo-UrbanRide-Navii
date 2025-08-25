@@ -1,16 +1,23 @@
+import { tokenCache } from "@/lib/auth";
 import { ClerkProvider } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from "react";
+import { LogBox } from "react-native";
 import 'react-native-reanimated';
-
 
 
 import "../global.css";
 
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+if (!publishableKey) {
+  throw new Error("Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env");
+}
+
+LogBox.ignoreLogs(["Clerk:"]);
 
 export default function RootLayout() {
   // const colorScheme = useColorScheme();
@@ -39,15 +46,17 @@ export default function RootLayout() {
 
   return (
     <>
-      <ClerkProvider tokenCache={tokenCache}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(root)" />
-          {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
+      <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+        {/* <ClerkLoaded> */}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(root)" />
+            {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        {/* </ClerkLoaded> */}
       </ClerkProvider>
     </>
   );

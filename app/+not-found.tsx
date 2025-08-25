@@ -28,3 +28,4 @@ const styles = StyleSheet.create({
     color: "blue", // optional for better UX
   },
 });
+
