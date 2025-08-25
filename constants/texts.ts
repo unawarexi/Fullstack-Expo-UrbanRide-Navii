@@ -1,23 +1,22 @@
 import { images } from "./images";
 
-
 export const onboarding = [
   {
     id: 1,
-    title: "The perfect ride is just a tap away!",
-    description: "Your journey begins with Ryde. Find your ideal ride effortlessly.",
+    title: "Navigate the city with ease",
+    description: "Welcome to Navii - your trusted companion for seamless urban transportation. Every journey starts here.",
     image: images.onboarding1,
   },
   {
     id: 2,
-    title: "Best car in your hands with Ryde",
-    description: "Discover the convenience of finding your perfect ride with Ryde",
+    title: "Premium rides at your fingertips",
+    description: "Experience comfort and reliability with Navii's curated fleet of vehicles, designed for the modern urban commuter.",
     image: images.onboarding2,
   },
   {
     id: 3,
-    title: "Your ride, your way. Let's go!",
-    description: "Enter your destination, sit back, and let us take care of the rest.",
+    title: "Your destination awaits",
+    description: "Set your destination, choose your ride, and let Navii handle the rest. Urban mobility made simple.",
     image: images.onboarding3,
   },
 ];
