@@ -33,7 +33,7 @@ const TabIcon = ({ source, focused }: TabIconProps) => {
 export default function Layout() {
   return (
     <Tabs
-      initialRouteName="index"
+      initialRouteName="home"
       screenOptions={{
         tabBarActiveTintColor: "white",
         tabBarInactiveTintColor: "white",
@@ -59,7 +59,7 @@ export default function Layout() {
         options={{
           title: "Home",
           headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon source={LucideIcons.home} focused={focused} />,
+          // tabBarIcon: ({ focused }) => <TabIcon source={LucideIcons.home} focused={focused} />,
         }}
       />
       <Tabs.Screen
