@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
@@ -9,7 +10,9 @@ import {
   DollarSign,
   Eye,
   EyeOff,
-  Home, List,
+  Home,
+  Info,
+  List,
   Lock,
   LogOut,
   Mail,
@@ -48,5 +51,7 @@ export const LucideIcons = {
   star: Star,
   target: Crosshair,
   to: ArrowRight,
+  AlertTriangle,
+  Info,
 
 };
