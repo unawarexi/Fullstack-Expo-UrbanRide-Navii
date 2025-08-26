@@ -3,10 +3,22 @@ import { useCallback, useEffect, useState } from "react";
 export const fetchAPI = async (url: string, options?: RequestInit) => {
   try {
     const response = await fetch(url, options);
+
+    // First check if the response is ok
     if (!response.ok) {
-      new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+
+    // Check if the response has content and is JSON
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      // If it's not JSON, return the text (might be an error page)
+      const text = await response.text();
+      console.error("Non-JSON response:", text);
+      throw new Error(`Expected JSON response but got: ${contentType || "unknown content type"}`);
+    }
   } catch (error) {
     console.error("Fetch error:", error);
     throw error;
@@ -24,7 +36,8 @@ export const useFetch = <T>(url: string, options?: RequestInit) => {
 
     try {
       const result = await fetchAPI(url, options);
-      setData(result.data);
+      // Check if the result has a data property, otherwise use the result directly
+      setData(result.data || result);
     } catch (err) {
       setError((err as Error).message);
     } finally {

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, Dimensions, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { z } from "zod";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Validation schema
 const signInSchema = z.object({
@@ -109,7 +109,7 @@ const SignIn = () => {
       <View className="flex-1">
         {/* Header Section */}
         <View className="relative w-full h-[280px] bg-white">
-          <Image source={images.signUpCar} className="w-full h-[280px]" resizeMode="contain" />
+          <Image source={images.signUpCar} className="w-full h-[280px]" resizeMode="cover" />
           <View className="absolute inset-0 bg-white/10" />
           <Animated.View style={containerAnimatedStyle} className="absolute bottom-0 left-0 right-0 p-5 bg-black/60 mb-4 rounded-t-3xl">
             <Text className="text-xl text-white font-JakartaBold">Welcome Back</Text>
@@ -190,7 +190,7 @@ const SignIn = () => {
           </Animated.View>
 
           {/* OAuth Section */}
-          <View className="my-8">
+          <View className="my-8 mx-6">
             <OAuth />
           </View>
 
