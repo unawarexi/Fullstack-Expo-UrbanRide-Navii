@@ -1,13 +1,13 @@
 import { tokenCache } from "@/lib/auth";
 import { ClerkProvider } from "@clerk/clerk-expo";
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
 import { LogBox } from "react-native";
-import 'react-native-reanimated';
-
+import "react-native-reanimated";
+import CustomSplashScreen from "./splash-screen"; // Adjust path as needed
 
 import "../global.css";
 
@@ -20,7 +20,6 @@ if (!publishableKey) {
 LogBox.ignoreLogs(["Clerk:"]);
 
 export default function RootLayout() {
-  // const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     "Jakarta-Bold": require("../assets/fonts/PlusJakartaSans-Bold.ttf"),
     "Jakarta-ExtraBold": require("../assets/fonts/PlusJakartaSans-ExtraBold.ttf"),
@@ -31,32 +30,39 @@ export default function RootLayout() {
     "Jakarta-SemiBold": require("../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
   });
 
+  const [showCustomSplash, setShowCustomSplash] = useState(true);
 
-    useEffect(() => {
-      if (loaded) {
-        SplashScreen.hideAsync();
-      }
-    }, [loaded]);
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
 
+  useEffect(() => {
+    // Hide custom splash after 3 seconds (matching animation duration)
+    if (loaded) {
+      const timer = setTimeout(() => {
+        setShowCustomSplash(false);
+      }, 3000);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+      return () => clearTimeout(timer);
+    }
+  }, [loaded]);
+
+  if (!loaded || showCustomSplash) {
+    return <CustomSplashScreen />;
   }
 
   return (
     <>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        {/* <ClerkLoaded> */}
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(root)" />
-            {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        {/* </ClerkLoaded> */}
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(root)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
       </ClerkProvider>
     </>
   );
