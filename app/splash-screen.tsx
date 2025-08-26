@@ -24,7 +24,7 @@ const SplashScreen = () => {
         </Animated.View>
 
         <Animated.View style={[textAnimatedStyle]} className="items-center">
-          <Text className="text-sm text-gray-500 mb-2 text-center" style={{ fontFamily: "Jakarta-Bold" }}>
+          <Text className="text-sm text-gray-500 mb-2  text-center" style={{ fontFamily: "Jakarta-Bold" }}>
             Zoom! Zooom!! Zoooom!!! 💨
           </Text>
         </Animated.View>
