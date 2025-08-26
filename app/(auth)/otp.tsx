@@ -2,6 +2,7 @@
 import { LucideIcons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import Toast from "@/core/utils/ToastNotifier";
+import { fetchAPI } from "@/lib/fetch";
 import { useSignUp } from "@clerk/clerk-expo";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -48,54 +49,53 @@ const OTPScreen = () => {
     setOtp(numericText);
   };
 
-  const onPressVerify = async () => {
-    if (!signUp || isVerifying || otp.length !== 6) {
-      if (otp.length !== 6) {
-        showToast("Please enter a 6-digit verification code", "error");
-      }
-      return;
+const onPressVerify = async () => {
+  if (!signUp || isVerifying || otp.length !== 6) {
+    if (otp.length !== 6) {
+      showToast("Please enter a 6-digit verification code", "error");
     }
+    return;
+  }
 
-    buttonScale.value = withSpring(0.95, { damping: 10, stiffness: 200 }, () => {
-      buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 });
+  buttonScale.value = withSpring(0.95, { damping: 10, stiffness: 200 }, () => {
+    buttonScale.value = withSpring(1, { damping: 10, stiffness: 200 });
+  });
+
+  setIsVerifying(true);
+  try {
+    const completeSignUp = await signUp.attemptEmailAddressVerification({
+      code: otp,
     });
 
-    setIsVerifying(true);
-    try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: otp,
+    if (completeSignUp.status === "complete") {
+      await fetchAPI("/(api)/user", {
+        method: "POST", // Use POST since we're creating a new user
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          clerkId: completeSignUp.createdUserId, // Real Clerk ID
+        }),
       });
 
-      if (completeSignUp.status === "complete") {
-        // Update user data with clerk ID
-        // await fetchAPI("/(api)/user", {
-        //   method: "PUT",
-        //   body: JSON.stringify({
-        //     name: name,
-        //     email: email,
-        //     clerkId: completeSignUp.createdUserId,
-        //   }),
-        // });
+      await setActive({ session: completeSignUp.createdSessionId });
 
-        await setActive({ session: completeSignUp.createdSessionId });
+      showToast("Account verified successfully!", "success");
 
-        showToast("Account verified successfully!", "success");
-
-        // Navigate to home screen after toast
-        setTimeout(() => {
-          router.replace("/(root)/(tabs)/home");
-        }, 1500);
-      } else {
-        showToast("Verification failed. Please try again.", "error");
-      }
-    } catch (err: any) {
-      console.log(JSON.stringify(err, null, 2));
-      const errorMessage = err?.errors?.[0]?.longMessage || "Verification failed. Please try again.";
-      showToast(errorMessage, "error");
-    } finally {
-      setIsVerifying(false);
+      // Navigate to home screen after toast
+      setTimeout(() => {
+        router.replace("/(tabs)/home");
+      }, 1500);
+    } else {
+      showToast("Verification failed. Please try again.", "error");
     }
-  };
+  } catch (err: any) {
+    console.log(JSON.stringify(err, null, 2));
+    const errorMessage = err?.errors?.[0]?.longMessage || "Verification failed. Please try again.";
+    showToast(errorMessage, "error");
+  } finally {
+    setIsVerifying(false);
+  }
+};
 
   const onResendCode = async () => {
     if (!signUp) return;

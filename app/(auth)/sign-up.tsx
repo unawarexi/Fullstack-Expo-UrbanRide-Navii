@@ -7,11 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Dimensions, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { z } from "zod";
 
-const { width: screenWidth } = Dimensions.get("window");
 
 // Validation schema
 const signUpSchema = z
@@ -56,7 +55,6 @@ const SignUp = () => {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -93,16 +91,6 @@ const SignUp = () => {
         password: data.password,
       });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-
-      // // Store user data for later use
-      // await fetchAPI("/(api)/user", {
-      //   method: "POST",
-      //   body: JSON.stringify({
-      //     name: data.name,
-      //     email: data.email,
-      //     clerkId: "pending",
-      //   }),
-      // });
 
       showToast("Verification code sent to your email!", "success");
 
