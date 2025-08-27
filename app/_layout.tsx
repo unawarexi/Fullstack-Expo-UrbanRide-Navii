@@ -7,8 +7,9 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import "react-native-reanimated";
-import CustomSplashScreen from "./splash-screen"; // Adjust path as needed
+import CustomSplashScreen from "./splash-screen";
 
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -55,16 +56,18 @@ export default function RootLayout() {
 
   return (
     <>
-      <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(root)" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ClerkProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(main)" />
+            <Stack.Screen name="(screens)" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        </ClerkProvider>
+      </GestureHandlerRootView>
     </>
   );
 }
