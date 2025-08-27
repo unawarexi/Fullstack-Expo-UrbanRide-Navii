@@ -1,30 +1,69 @@
-
 import { useAuth } from "@clerk/clerk-expo";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 
 const Page = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, signOut } = useAuth();
   const [isReady, setIsReady] = useState(false);
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [forcedSignOut, setForcedSignOut] = useState(false); // 🔑 new state
+  const router = useRouter();
 
   useEffect(() => {
-    // Wait for auth to be loaded before making navigation decisions
+    let timer: ReturnType<typeof setTimeout>;
+    let warningTimer: ReturnType<typeof setTimeout>;
+
+    if (!isLoaded) {
+      // Warning after 55s
+      warningTimer = setTimeout(() => {
+        setShowWarning(true);
+      }, 55000);
+
+      // Timeout after 60s
+      timer = setTimeout(async () => {
+        setTimeoutReached(true);
+        setForcedSignOut(true); 
+        await signOut();
+        router.replace("/(auth)/sign-in");
+      }, 60000);
+    }
+
     if (isLoaded) {
       setIsReady(true);
     }
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(warningTimer);
+    };
   }, [isLoaded]);
 
-  // Show loading/blank screen while auth is loading
-  if (!isReady) {
-    return null; // or a loading component
+  // Show loading screen
+  if (!isReady && !timeoutReached) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="text-gray-500 mt-4 text-lg font-semibold">Loading...</Text>
+
+        {showWarning && (
+          <Animated.View entering={FadeInUp.duration(800)} className="mt-6 px-6">
+            <Text className="text-red-500 text-center text-base font-medium">App is taking too long, please try again.</Text>
+          </Animated.View>
+        )}
+      </View>
+    );
   }
 
-  // If user is signed in, go directly to home
+
   if (isSignedIn) {
-    return <Redirect href="/(tabs)/home" />;
+    return <Redirect href="/(main)" />;
   }
-
-  // If not signed in, go to onboarding
+  if (forcedSignOut) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
   return <Redirect href="/(auth)/onboarding" />;
 };
 
