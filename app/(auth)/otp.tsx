@@ -83,7 +83,7 @@ const onPressVerify = async () => {
 
       // Navigate to home screen after toast
       setTimeout(() => {
-        router.replace("/(tabs)/home");
+        router.replace("/(main)");
       }, 1500);
     } else {
       showToast("Verification failed. Please try again.", "error");
