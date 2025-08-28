@@ -5,6 +5,7 @@
 # Xcode
 #
 build/
+/Navii/Info.plist
 *.pbxuser
 !default.pbxuser
 *.mode1v3
