@@ -1,12 +1,12 @@
 import { Tabs } from "expo-router";
 import * as LucideIcons from "lucide-react-native";
 import React from "react";
-import { Platform, StatusBar, View } from "react-native";
+import { Platform, View } from "react-native";
 
 export default function ScreenLayout() {
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar backgroundColor="#0f172a" barStyle="light-content" translucent={false} />
+      {/* <StatusBar backgroundColor="#0f172a" barStyle="light-content" translucent={false} /> */}
 
       <Tabs
         initialRouteName="index"
@@ -31,7 +31,7 @@ export default function ScreenLayout() {
             borderTopColor: "#e2e8f0",
             height: Platform.OS === "ios" ? 90 : 70,
             paddingBottom: Platform.OS === "ios" ? 30 : 15,
-           paddingTop: 10,
+            paddingTop: 10,
             paddingHorizontal: 20,
           },
           tabBarActiveTintColor: "#ffffff",

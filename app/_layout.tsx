@@ -1,5 +1,5 @@
 import { tokenCache } from "@/lib/auth";
-import { ClerkProvider } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -58,14 +58,16 @@ export default function RootLayout() {
     <>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(main)" />
-            <Stack.Screen name="(screens)" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
+          <ClerkLoaded>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(main)" />
+              <Stack.Screen name="(screens)" />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
+          </ClerkLoaded>
         </ClerkProvider>
       </GestureHandlerRootView>
     </>
