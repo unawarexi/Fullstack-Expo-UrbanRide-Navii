@@ -54,7 +54,7 @@ interface MapRegion {
 const Index = () => {
   const { user, isLoaded } = useUser();
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(true);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  // const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [mapRegion, setMapRegion] = useState<MapRegion>({
     latitude: 37.78825,
@@ -172,17 +172,17 @@ const Index = () => {
     }
   };
 
-  const handleMenuPress = () => {
-    if (!isMounted) return;
-    setIsSidebarVisible(true);
-    setIsBottomSheetVisible(false);
-  };
+  // const handleMenuPress = () => {
+  //   if (!isMounted) return;
+  //   setIsSidebarVisible(true);
+  //   setIsBottomSheetVisible(false);
+  // };
 
-  const handleSidebarClose = () => {
-    if (!isMounted) return;
-    setIsSidebarVisible(false);
-    setIsBottomSheetVisible(true);
-  };
+  // const handleSidebarClose = () => {
+  //   if (!isMounted) return;
+  //   setIsSidebarVisible(false);
+  //   setIsBottomSheetVisible(true);
+  // };
 
   const handleMyLocationPress = () => {
     if (isLoadingLocation) return;
@@ -257,7 +257,7 @@ const Index = () => {
           </MapView>
 
           <View className="absolute top-14 mx-4 left-4 right-4 flex-row justify-between items-start">
-            <TouchableOpacity onPress={handleMenuPress} className="w-12 h-12 rounded-full items-center justify-center bg-white/90 backdrop-blur-md shadow-lg active:opacity-80">
+            <TouchableOpacity className="w-12 h-12 rounded-full items-center justify-center bg-white/90 backdrop-blur-md shadow-lg active:opacity-80">
               <Menu size={24} color="#374151" />
             </TouchableOpacity>
 
