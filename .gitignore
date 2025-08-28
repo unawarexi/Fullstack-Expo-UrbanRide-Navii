@@ -40,6 +40,7 @@ yarn-error.*
 
 app-example
 
+docs.txt
 
 # env
 .env
