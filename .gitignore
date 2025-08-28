@@ -23,8 +23,6 @@ expo-env.d.ts
 
 assets/preview
 
-ios/Navii
-
 # debug
 npm-debug.*
 yarn-debug.*
