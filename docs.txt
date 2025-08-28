@@ -1,0 +1,22 @@
+display home screen  
+add a side bar to it and add search to the top
+display google maps and theme it, display our current location with pins
+beneath it a draggable bottomsheet recent rides history
+if past a certain point route us to full screen search ride screen and functionality and back
+add multiple stop points functionality and auto complete search
+and take the data back to the home screen
+then using google features check distance, time, location and evrything and show to the user
+then Find ride bottom sheet where it starts to search for drivers
+
+i want you to implement all the functions, based on waht we have in our search input  and index , make it resusable so we can use these functions anywhere in our app
+getCurrentLocation,
+geocodeLatAndLong of every location given; current, pickup and destination and multiple stoppoints location,
+displayMapWithCurrentlocation and single Marker and custom theme,
+searchLocation,
+AutoCompleteLocation,
+addDualPolylines only pickup and destination,
+addMultiplePolylines  pickup and destination and multiplepoints,
+addDualMarkersAndStopPointsIndicators for pickup and destination and multiplepoints,
+autoCalculateDistance for pickup and destination and multiplepoints (if added),
+autoCalculateTime for pickup and destination and multiplepoints (if added),
+addIconsToLocations e.g hotel, resturnts, mechanics and more,
