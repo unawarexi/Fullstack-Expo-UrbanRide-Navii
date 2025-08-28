@@ -10,7 +10,7 @@ import CustomBottomSheet from "@/components/BottomSheets";
 import RideItem from "@/components/RideItems";
 import { recentRides } from "@/core/data/data";
 import { router } from "expo-router";
-import Sidebar from "../(screens)/(home)/sidebar";
+// import Sidebar from "../(screens)/(home)/sidebar";
 
 // Import map services
 import { getCurrentLocation, LocationData } from "@/core/maps/maps-services";
@@ -63,26 +63,46 @@ const Index = () => {
     longitudeDelta: 0.0421,
   });
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [isMounted, setIsMounted] = useState(true); // Add mounted state
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const mapRef = useRef<MapView>(null);
 
   // Load user's current location on component mount
   useEffect(() => {
+    console.log("Google Maps API Key:", process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ? "Loaded" : "Missing");
     loadCurrentLocation();
+
+    // Cleanup function
+    return () => {
+      setIsMounted(false);
+    };
   }, []);
 
-  const handleSheetChange = useCallback((index: number) => {
-    // If dragged past 90% (index 2), navigate to history screen
-    if (index === 2) {
-      router.push("/(screens)/(home)/history");
-    }
-  }, []);
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      // Add safety check for mounted component
+      if (!isMounted) return;
+
+      // If dragged past 90% (index 2), navigate to history screen
+      if (index === 2) {
+        try {
+          router.push("/(screens)/(home)/history");
+        } catch (error) {
+          console.error("Navigation error:", error);
+        }
+      }
+    },
+    [isMounted]
+  );
 
   const loadCurrentLocation = async () => {
     try {
       setIsLoadingLocation(true);
       const location = await getCurrentLocation();
+
+      // Check if component is still mounted before updating state
+      if (!isMounted) return;
 
       if (location) {
         setCurrentLocation(location);
@@ -94,16 +114,24 @@ const Index = () => {
         };
         setMapRegion(newRegion);
 
-        // Animate to user's location
-        if (mapRef.current) {
-          mapRef.current.animateToRegion(newRegion, 1000);
+        // Animate to user's location with safety check
+        if (mapRef.current && isMounted) {
+          setTimeout(() => {
+            if (mapRef.current && isMounted) {
+              mapRef.current.animateToRegion(newRegion, 1000);
+            }
+          }, 100);
         }
       }
     } catch (error) {
       console.error("Error loading current location:", error);
-      Alert.alert("Location Error", "Failed to get your current location");
+      if (isMounted) {
+        Alert.alert("Location Error", "Failed to get your current location");
+      }
     } finally {
-      setIsLoadingLocation(false);
+      if (isMounted) {
+        setIsLoadingLocation(false);
+      }
     }
   };
 
@@ -118,36 +146,48 @@ const Index = () => {
   }
 
   const handleWhereToPress = () => {
-    // Navigate to search screen with current location
-    router.push({
-      pathname: "/(screens)/(home)/search-input-field",
-      params: {
-        currentLocation: JSON.stringify(currentLocation),
-      },
-    });
+    try {
+      // Navigate to search screen with current location
+      router.push({
+        pathname: "/(screens)/(home)/search-input-field",
+        params: {
+          currentLocation: JSON.stringify(currentLocation),
+        },
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
 
   const handleRidePress = (ride: Ride) => {
-    router.push({
-      pathname: "/(screens)/(home)/history-ride-details",
-      params: {
-        rideData: JSON.stringify(ride),
-      },
-    });
+    try {
+      router.push({
+        pathname: "/(screens)/(home)/history-ride-details",
+        params: {
+          rideData: JSON.stringify(ride),
+        },
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
 
   const handleMenuPress = () => {
+    if (!isMounted) return;
     setIsSidebarVisible(true);
     setIsBottomSheetVisible(false);
   };
 
   const handleSidebarClose = () => {
+    if (!isMounted) return;
     setIsSidebarVisible(false);
     setIsBottomSheetVisible(true);
   };
 
   const handleMyLocationPress = () => {
-    if (currentLocation && mapRef.current) {
+    if (isLoadingLocation) return;
+
+    if (currentLocation && mapRef.current && isMounted) {
       const region = {
         latitude: currentLocation.coordinates.latitude,
         longitude: currentLocation.coordinates.longitude,
@@ -160,18 +200,63 @@ const Index = () => {
     }
   };
 
-  const rides: Ride[] = recentRides[0] || [];
+  // Add safety check for rides data
+  const rides: Ride[] = Array.isArray(recentRides) && recentRides.length > 0 ? recentRides[0] : [];
+
+  const handleMapReady = useCallback(() => {
+    console.log("Map is ready");
+    // Force a region update when map is ready with safety checks
+    if (currentLocation && mapRef.current && isMounted) {
+      const region = {
+        latitude: currentLocation.coordinates.latitude,
+        longitude: currentLocation.coordinates.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setTimeout(() => {
+        if (mapRef.current && isMounted) {
+          mapRef.current.animateToRegion(region, 1000);
+        }
+      }, 500);
+    }
+  }, [currentLocation, isMounted]);
+
+  const handleRegionChange = useCallback(
+    (region: MapRegion) => {
+      if (isMounted) {
+        setMapRegion(region);
+      }
+    },
+    [isMounted]
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="flex-1">
-        <View className="flex-1 mx-4 rounded-2xl mb-4 overflow-hidden relative">
-          <MapView ref={mapRef} style={{ flex: 1 }} provider={PROVIDER_GOOGLE} initialRegion={mapRegion} customMapStyle={lightIceBlueMapStyle} showsUserLocation={true} showsMyLocationButton={false} showsCompass={true} showsScale={true} onRegionChange={(region) => setMapRegion(region)}>
-            {/* Current Location Marker */}
-            {currentLocation && <Marker coordinate={currentLocation.coordinates} title="Your Location" description={currentLocation.address} pinColor="#3B82F6" />}
+        <View className="flex-1 rounded-2xl mb-4 overflow-hidden relative">
+          <MapView
+            ref={mapRef}
+            style={{ flex: 1 }}
+            provider={PROVIDER_GOOGLE}
+            region={mapRegion} // Use region instead of initialRegion
+            customMapStyle={lightIceBlueMapStyle}
+            showsUserLocation={true}
+            showsMyLocationButton={false}
+            showsCompass={true}
+            showsScale={true}
+            showsBuildings={true}
+            showsTraffic={false}
+            showsIndoors={true}
+            showsPointsOfInterest={true}
+            mapType="standard" // Explicitly set map type
+            onRegionChange={handleRegionChange}
+            onMapReady={handleMapReady}
+          >
+            {/* Current Location Marker with safety check */}
+            {currentLocation && currentLocation.coordinates && <Marker coordinate={currentLocation.coordinates} title="Your Location" description={currentLocation.address} pinColor="#3B82F6" />}
           </MapView>
 
-          <View className="absolute top-4 left-4 right-4 flex-row justify-between items-start">
+          <View className="absolute top-14 mx-4 left-4 right-4 flex-row justify-between items-start">
             <TouchableOpacity onPress={handleMenuPress} className="w-12 h-12 rounded-full items-center justify-center bg-white/90 backdrop-blur-md shadow-lg active:opacity-80">
               <Menu size={24} color="#374151" />
             </TouchableOpacity>
@@ -193,7 +278,7 @@ const Index = () => {
       </View>
 
       {/* Custom Bottom Sheet - Only show when sidebar is not visible */}
-      {isBottomSheetVisible && (
+      {isBottomSheetVisible && isMounted && (
         <CustomBottomSheet
           ref={bottomSheetRef}
           isVisible={isBottomSheetVisible}
@@ -250,7 +335,15 @@ const Index = () => {
             <View className="flex-1 mt-6">
               <View className="px-4 mb-4 flex-row justify-between items-center">
                 <Text className="text-lg font-bold text-gray-800">Recent Rides</Text>
-                <TouchableOpacity onPress={() => router.push("/(screens)/(home)/history")}>
+                <TouchableOpacity
+                  onPress={() => {
+                    try {
+                      router.push("/(screens)/(home)/history");
+                    } catch (error) {
+                      console.error("Navigation error:", error);
+                    }
+                  }}
+                >
                   <Text className="text-blue-600 font-medium">See all</Text>
                 </TouchableOpacity>
               </View>
@@ -262,7 +355,16 @@ const Index = () => {
 
                 {/* Show more rides hint when expanded */}
                 {rides.length > 4 && (
-                  <TouchableOpacity onPress={() => router.push("/(screens)/(home)/history")} className="bg-blue-50 border-2 border-dashed border-blue-200 rounded-2xl p-6 items-center justify-center">
+                  <TouchableOpacity
+                    onPress={() => {
+                      try {
+                        router.push("/(screens)/(home)/history");
+                      } catch (error) {
+                        console.error("Navigation error:", error);
+                      }
+                    }}
+                    className="bg-blue-50 border-2 border-dashed border-blue-200 rounded-2xl p-6 items-center justify-center"
+                  >
                     <Text className="text-blue-600 font-medium">Drag up to see all {rides.length} rides</Text>
                     <Text className="text-blue-400 text-sm mt-1">or tap to view history</Text>
                   </TouchableOpacity>
@@ -274,7 +376,7 @@ const Index = () => {
       )}
 
       {/* Sidebar Component */}
-      <Sidebar isVisible={isSidebarVisible} onClose={handleSidebarClose} />
+      {/* {isMounted && <Sidebar isVisible={isSidebarVisible} onClose={handleSidebarClose} />} */}
     </SafeAreaView>
   );
 };
