@@ -140,7 +140,7 @@ const lightIceBlueMapStyle = [
     elementType: "geometry",
     stylers: [
       {
-        color: "#ffffff", // Pure white background
+        color: "#f9fafb", // very soft gray-white background
       },
     ],
   },
@@ -201,7 +201,7 @@ const lightIceBlueMapStyle = [
     elementType: "geometry",
     stylers: [
       {
-        color: "#eff6ff", // Very light blue touch
+        color: "#dbeafe", // Very light blue touch
       },
     ],
   },
@@ -210,7 +210,7 @@ const lightIceBlueMapStyle = [
     elementType: "geometry",
     stylers: [
       {
-        color: "#dbeafe", // Light blue
+        color: "#dbeafe", // Very light blue touch
       },
     ],
   },
@@ -219,7 +219,7 @@ const lightIceBlueMapStyle = [
     elementType: "geometry",
     stylers: [
       {
-        color: "#dbeafe", // Sharp blue-500 for highways
+        color: "#dbeafe", // Very light blue touch
       },
     ],
   },
@@ -246,7 +246,7 @@ const lightIceBlueMapStyle = [
     elementType: "geometry",
     stylers: [
       {
-        color: "#dbeafe", // Light blue
+        color: "#dbeafe", // Very light blue touch
       },
     ],
   },
