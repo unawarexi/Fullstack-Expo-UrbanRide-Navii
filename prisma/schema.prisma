@@ -1,0 +1,545 @@
+// This is your Prisma schema file for Navii ride-sharing app
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Role {
+  USER
+  DRIVER
+  ADMIN
+}
+
+enum RideStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  WALLET
+  BANK_TRANSFER
+}
+
+enum NegotiationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum PromoType {
+  NEW_USER
+  INACTIVE_USER
+  GENERAL
+  SPECIAL_EVENT
+  REFERRAL
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  RESTRICTED
+  DEACTIVATED
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  SUSPENDED
+}
+
+// Base User Model
+model User {
+  id                String         @id @default(cuid())
+  clerkId           String         @unique @map("clerk_id")
+  email             String         @unique
+  name              String
+  phone             String?
+  profileImageUrl   String?        @map("profile_image_url")
+  role              Role           @default(USER)
+  accountStatus     AccountStatus  @default(ACTIVE)
+  rating            Decimal?       @db.Decimal(3, 2)
+  totalRides        Int            @default(0) @map("total_rides")
+  joinedAt          DateTime       @default(now()) @map("joined_at")
+  lastActiveAt      DateTime       @default(now()) @map("last_active_at")
+  isEmailVerified   Boolean        @default(false) @map("is_email_verified")
+  isPhoneVerified   Boolean        @default(false) @map("is_phone_verified")
+  
+  // Relationships
+  userRides         Ride[]         @relation("UserRides")
+  driverProfile     Driver?
+  adminProfile      Admin?
+  userRatings       Rating[]       @relation("UserRatings")
+  driverRatings     Rating[]       @relation("DriverRatings")
+  negotiations      Negotiation[]
+  usedPromos        UserPromo[]
+  favoriteLocations FavoriteLocation[]
+  recentLocations   RecentLocation[]
+  wallet            Wallet?
+  notifications     Notification[]
+  supportTickets    SupportTicket[]
+  referrals         Referral[]     @relation("ReferrerUser")
+  referredBy        Referral[]     @relation("ReferredUser")
+
+  @@map("users")
+}
+
+// Driver Profile Model
+model Driver {
+  id              String        @id @default(cuid())
+  userId          String        @unique @map("user_id")
+  licenseNumber   String        @unique @map("license_number")
+  licenseExpiry   DateTime      @map("license_expiry")
+  identityNumber  String        @unique @map("identity_number")
+  identityType    String        @map("identity_type") // e.g., "passport", "national_id"
+  bankAccountNumber String?     @map("bank_account_number")
+  bankName        String?       @map("bank_name")
+  isVerified      Boolean       @default(false) @map("is_verified")
+  isOnline        Boolean       @default(false) @map("is_online")
+  currentLatitude Decimal?      @db.Decimal(9, 6) @map("current_latitude")
+  currentLongitude Decimal?     @db.Decimal(9, 6) @map("current_longitude")
+  rating          Decimal?      @db.Decimal(3, 2)
+  totalRides      Int           @default(0) @map("total_rides")
+  totalEarnings   Decimal       @default(0) @db.Decimal(12, 2) @map("total_earnings")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  
+  // Relationships
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles        Vehicle[]
+  driverRides     Ride[]        @relation("DriverRides")
+  driverDocuments DriverDocument[]
+  earnings        Earning[]
+
+  @@map("drivers")
+}
+
+// Vehicle Model
+model Vehicle {
+  id              String        @id @default(cuid())
+  driverId        String        @map("driver_id")
+  make            String
+  model           String
+  year            Int
+  color           String
+  plateNumber     String        @unique @map("plate_number")
+  seats           Int           @db.SmallInt
+  imageUrl        String?       @map("image_url")
+  status          VehicleStatus @default(ACTIVE)
+  insuranceExpiry DateTime?     @map("insurance_expiry")
+  registrationExpiry DateTime?  @map("registration_expiry")
+  isVerified      Boolean       @default(false) @map("is_verified")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  
+  // Relationships
+  driver          Driver        @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  rides           Ride[]
+
+  @@map("vehicles")
+}
+
+// Admin Profile Model
+model Admin {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  employeeId      String   @unique @map("employee_id")
+  department      String
+  verificationCardUrl String? @map("verification_card_url")
+  permissions     String[] // JSON array of permissions
+  isVerified      Boolean  @default(false) @map("is_verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  handledTickets  SupportTicket[]
+
+  @@map("admins")
+}
+
+// Ride Model
+model Ride {
+  id                    String         @id @default(cuid())
+  userId                String         @map("user_id")
+  driverId              String?        @map("driver_id")
+  vehicleId             String?        @map("vehicle_id")
+  
+  // Location data
+  originAddress         String         @map("origin_address")
+  destinationAddress    String         @map("destination_address")
+  originLatitude        Decimal        @db.Decimal(9, 6) @map("origin_latitude")
+  originLongitude       Decimal        @db.Decimal(9, 6) @map("origin_longitude")
+  destinationLatitude   Decimal        @db.Decimal(9, 6) @map("destination_latitude")
+  destinationLongitude  Decimal        @db.Decimal(9, 6) @map("destination_longitude")
+  
+  // Stop points (JSON array)
+  stopPoints            Json?          @map("stop_points")
+  
+  // Pricing and payment
+  originalFarePrice     Decimal        @db.Decimal(10, 2) @map("original_fare_price")
+  negotiatedFarePrice   Decimal?       @db.Decimal(10, 2) @map("negotiated_fare_price")
+  finalFarePrice        Decimal?       @db.Decimal(10, 2) @map("final_fare_price")
+  paymentStatus         PaymentStatus  @default(PENDING) @map("payment_status")
+  paymentMethod         PaymentMethod? @map("payment_method")
+  
+  // Ride details
+  status                RideStatus     @default(PENDING)
+  rideTime              Int?           @map("ride_time") // Duration in minutes
+  distance              Decimal?       @db.Decimal(8, 2) // Distance in kilometers
+  seats                 Int            @db.SmallInt @default(1)
+  
+  // Timestamps
+  scheduledAt           DateTime?      @map("scheduled_at")
+  acceptedAt            DateTime?      @map("accepted_at")
+  startedAt             DateTime?      @map("started_at")
+  completedAt           DateTime?      @map("completed_at")
+  cancelledAt           DateTime?      @map("cancelled_at")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  
+  // Additional fields
+  notes                 String?
+  cancelReason          String?        @map("cancel_reason")
+  promoCodeId           String?        @map("promo_code_id")
+  
+  // Relationships
+  user                  User           @relation("UserRides", fields: [userId], references: [id])
+  driver                Driver?        @relation("DriverRides", fields: [driverId], references: [id])
+  vehicle               Vehicle?       @relation(fields: [vehicleId], references: [id])
+  rating                Rating?
+  negotiations          Negotiation[]
+  promoCode             PromoCode?     @relation(fields: [promoCodeId], references: [id])
+  payment               Payment?
+
+  @@map("rides")
+}
+
+// Negotiation Model
+model Negotiation {
+  id              String            @id @default(cuid())
+  rideId          String            @map("ride_id")
+  userId          String            @map("user_id")
+  proposedPrice   Decimal           @db.Decimal(10, 2) @map("proposed_price")
+  status          NegotiationStatus @default(PENDING)
+  expiresAt       DateTime          @map("expires_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  respondedAt     DateTime?         @map("responded_at")
+  
+  // Relationships
+  ride            Ride              @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id])
+
+  @@map("negotiations")
+}
+
+// Rating and Review Model
+model Rating {
+  id              String   @id @default(cuid())
+  rideId          String   @unique @map("ride_id")
+  userId          String   @map("user_id") // Who gave the rating
+  driverId        String   @map("driver_id") // Who received the rating
+  rating          Int      @db.SmallInt // 1-5 stars
+  comment         String?
+  isUserToDriver  Boolean  @map("is_user_to_driver") // true: user rating driver, false: driver rating user
+  isVisible       Boolean  @default(true) @map("is_visible") // Admin can hide inappropriate comments
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  ride            Ride     @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  user            User     @relation("UserRatings", fields: [userId], references: [id])
+  driver          User     @relation("DriverRatings", fields: [driverId], references: [id])
+
+  @@map("ratings")
+}
+
+// Promo Codes Model
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  title           String
+  description     String?
+  type            PromoType
+  discountType    String    @map("discount_type") // "percentage" or "fixed"
+  discountValue   Decimal   @db.Decimal(10, 2) @map("discount_value")
+  minRideAmount   Decimal?  @db.Decimal(10, 2) @map("min_ride_amount")
+  maxDiscount     Decimal?  @db.Decimal(10, 2) @map("max_discount")
+  usageLimit      Int?      @map("usage_limit")
+  usageCount      Int       @default(0) @map("usage_count")
+  userLimit       Int?      @map("user_limit") // Max times per user
+  isActive        Boolean   @default(true) @map("is_active")
+  validFrom       DateTime  @map("valid_from")
+  validUntil      DateTime  @map("valid_until")
+  targetUserIds   String[]  @map("target_user_ids") // Specific users (for inactive user promos)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  // Relationships
+  rides           Ride[]
+  userPromos      UserPromo[]
+
+  @@map("promo_codes")
+}
+
+// User Promo Usage Tracking
+model UserPromo {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  promoCodeId String    @map("promo_code_id")
+  usageCount  Int       @default(0) @map("usage_count")
+  lastUsedAt  DateTime? @map("last_used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  // Relationships
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promoCodeId])
+  @@map("user_promos")
+}
+
+// Driver Documents Model
+model DriverDocument {
+  id          String   @id @default(cuid())
+  driverId    String   @map("driver_id")
+  type        String   // "license", "identity", "insurance", "registration"
+  documentUrl String   @map("document_url")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  expiryDate  DateTime? @map("expiry_date")
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
+  verifiedAt  DateTime? @map("verified_at")
+  
+  // Relationships
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driver_documents")
+}
+
+// Favorite Locations Model
+model FavoriteLocation {
+  id          String  @id @default(cuid())
+  userId      String  @map("user_id")
+  name        String  // "Home", "Work", "Gym", etc.
+  address     String
+  latitude    Decimal @db.Decimal(9, 6)
+  longitude   Decimal @db.Decimal(9, 6)
+  placeId     String? @map("place_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("favorite_locations")
+}
+
+// Recent Locations Model
+model RecentLocation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  address     String
+  latitude    Decimal  @db.Decimal(9, 6)
+  longitude   Decimal  @db.Decimal(9, 6)
+  placeId     String?  @map("place_id")
+  accessedAt  DateTime @default(now()) @map("accessed_at")
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("recent_locations")
+}
+
+// Payment Model
+model Payment {
+  id              String        @id @default(cuid())
+  rideId          String        @unique @map("ride_id")
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?       @map("transaction_id")
+  promoDiscount   Decimal?      @db.Decimal(10, 2) @map("promo_discount")
+  platformFee     Decimal       @db.Decimal(10, 2) @map("platform_fee")
+  driverEarning   Decimal       @db.Decimal(10, 2) @map("driver_earning")
+  processedAt     DateTime?     @map("processed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  // Relationships
+  ride            Ride          @relation(fields: [rideId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// Wallet Model
+model Wallet {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  balance         Decimal  @default(0) @db.Decimal(12, 2)
+  totalDeposited  Decimal  @default(0) @db.Decimal(12, 2) @map("total_deposited")
+  totalSpent      Decimal  @default(0) @db.Decimal(12, 2) @map("total_spent")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relationships
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    WalletTransaction[]
+
+  @@map("wallets")
+}
+
+// Wallet Transaction Model
+model WalletTransaction {
+  id              String   @id @default(cuid())
+  walletId        String   @map("wallet_id")
+  type            String   // "deposit", "withdrawal", "ride_payment", "refund"
+  amount          Decimal  @db.Decimal(12, 2)
+  description     String
+  referenceId     String?  @map("reference_id") // Could be ride_id, payment_id, etc.
+  balanceBefore   Decimal  @db.Decimal(12, 2) @map("balance_before")
+  balanceAfter    Decimal  @db.Decimal(12, 2) @map("balance_after")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}
+
+// Driver Earnings Model
+model Earning {
+  id          String   @id @default(cuid())
+  driverId    String   @map("driver_id")
+  amount      Decimal  @db.Decimal(10, 2)
+  date        DateTime @db.Date
+  rideCount   Int      @map("ride_count")
+  totalFares  Decimal  @db.Decimal(12, 2) @map("total_fares")
+  platformFees Decimal @db.Decimal(12, 2) @map("platform_fees")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, date])
+  @@map("earnings")
+}
+
+// Notification Model
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  message     String
+  type        String   // "ride", "promo", "system", "payment"
+  isRead      Boolean  @default(false) @map("is_read")
+  data        Json?    // Additional data (ride_id, promo_id, etc.)
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Support Ticket Model
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  adminId     String?  @map("admin_id")
+  subject     String
+  description String
+  status      String   @default("open") // "open", "in_progress", "resolved", "closed"
+  priority    String   @default("medium") // "low", "medium", "high", "urgent"
+  category    String   // "technical", "payment", "driver", "general"
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  resolvedAt  DateTime? @map("resolved_at")
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admin       Admin?   @relation(fields: [adminId], references: [id])
+  messages    SupportMessage[]
+
+  @@map("support_tickets")
+}
+
+// Support Message Model
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String        @map("ticket_id")
+  userId    String        @map("user_id")
+  message   String
+  isStaff   Boolean       @default(false) @map("is_staff")
+  createdAt DateTime      @default(now()) @map("created_at")
+  
+  // Relationships
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("support_messages")
+}
+
+// Referral Model
+model Referral {
+  id              String   @id @default(cuid())
+  referrerUserId  String   @map("referrer_user_id")
+  referredUserId  String   @map("referred_user_id")
+  referralCode    String   @unique @map("referral_code")
+  isRewardClaimed Boolean  @default(false) @map("is_reward_claimed")
+  rewardAmount    Decimal? @db.Decimal(10, 2) @map("reward_amount")
+  createdAt       DateTime @default(now()) @map("created_at")
+  rewardClaimedAt DateTime? @map("reward_claimed_at")
+  
+  // Relationships
+  referrer        User     @relation("ReferrerUser", fields: [referrerUserId], references: [id])
+  referred        User     @relation("ReferredUser", fields: [referredUserId], references: [id])
+
+  @@map("referrals")
+}
+
+// App Settings Model (for admin configuration)
+model AppSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+// System Logs Model (for tracking important events)
+model SystemLog {
+  id          String   @id @default(cuid())
+  userId      String?  @map("user_id")
+  action      String   // "user_suspended", "driver_verified", "ride_completed", etc.
+  entityType  String   @map("entity_type") // "user", "driver", "ride", "promo"
+  entityId    String   @map("entity_id")
+  details     Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("system_logs")
+}
