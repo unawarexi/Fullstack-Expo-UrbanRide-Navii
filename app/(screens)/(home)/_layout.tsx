@@ -6,7 +6,6 @@ const Layout = () => {
       <Stack.Screen name="history"  />
       <Stack.Screen name="history-ride-details"  />
       <Stack.Screen name="search-input-field" />
-      <Stack.Screen name="sidebar" />
       <Stack.Screen name="map-results" />
     </Stack>
   );

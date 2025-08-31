@@ -1,24 +1,18 @@
-import { useUser } from "@clerk/clerk-expo";
-import { Search } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { MapPin, Menu, Search } from "lucide-react-native";
+import { useCallback, useRef, useState } from "react";
+import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import BottomSheet from "@gorhom/bottom-sheet";
 
 import CustomBottomSheet from "@/components/BottomSheets";
+import MapComponent from "@/components/Map"; // Import our separated map
 import RideItem from "@/components/RideItems";
 import { recentRides } from "@/core/data/data";
+import { LocationData } from "@/core/maps/maps-services";
 import { router } from "expo-router";
-// import Sidebar from "../(screens)/(home)/sidebar";
-
-// Import map services
-import { getCurrentLocation, LocationData } from "@/core/maps/maps-services";
-import { lightIceBlueMapStyle } from "@/core/themes/map-themes";
-// lightIceBlueMapStyle
 
 // Types
- interface Driver {
+interface Driver {
   driver_id: string;
   first_name: string;
   last_name: string;
@@ -45,137 +39,34 @@ interface Ride {
   driver: Driver;
 }
 
-interface MapRegion {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
-
 export default function Index() {
-  const { user, isLoaded } = useUser();
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(true);
-  // const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
-  const [mapRegion, setMapRegion] = useState<MapRegion>({
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
-  const [isMounted, setIsMounted] = useState(true); // Add mounted state
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const mapRef = useRef<MapView>(null);
 
-  // Load user's current location on component mount
-  useEffect(() => {
-    console.log("Google Maps API Key:", process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ? "Loaded" : "Missing");
-    loadCurrentLocation();
-
-    // Cleanup function
-    return () => {
-      setIsMounted(false);
-    };
-  }, []);
-
-    const handleMapReady = useCallback(() => {
-      console.log("Map is ready");
-      // Force a region update when map is ready with safety checks
-      if (currentLocation && mapRef.current && isMounted) {
-        const region = {
-          latitude: currentLocation.coordinates.latitude,
-          longitude: currentLocation.coordinates.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-        setTimeout(() => {
-          if (mapRef.current && isMounted) {
-            mapRef.current.animateToRegion(region, 1000);
-          }
-        }, 500);
-      }
-    }, [currentLocation, isMounted]);
-
-    const handleRegionChange = useCallback(
-      (region: MapRegion) => {
-        if (isMounted) {
-          setMapRegion(region);
-        }
-      },
-      [isMounted]
-    );
-
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      // Add safety check for mounted component
-      if (!isMounted) return;
-
-      // If dragged past 90% (index 2), navigate to history screen
-      if (index === 2) {
-        try {
-          router.push("/(screens)/(home)/history");
-        } catch (error) {
-          console.error("Navigation error:", error);
-        }
-      }
-    },
-    [isMounted]
-  );
-
-  const loadCurrentLocation = async () => {
-    try {
-      setIsLoadingLocation(true);
-      const location = await getCurrentLocation();
-
-      // Check if component is still mounted before updating state
-      if (!isMounted) return;
-
-      if (location) {
-        setCurrentLocation(location);
-        const newRegion = {
-          latitude: location.coordinates.latitude,
-          longitude: location.coordinates.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-        setMapRegion(newRegion);
-
-        // Animate to user's location with safety check
-        if (mapRef.current && isMounted) {
-          setTimeout(() => {
-            if (mapRef.current && isMounted) {
-              mapRef.current.animateToRegion(newRegion, 1000);
-            }
-          }, 100);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading current location:", error);
-      if (isMounted) {
-        Alert.alert("Location Error", "Failed to get your current location");
-      }
-    } finally {
-      if (isMounted) {
-        setIsLoadingLocation(false);
+  const handleSheetChange = useCallback((index: number) => {
+    // If dragged past 90% (index 2), navigate to history screen
+    if (index === 2) {
+      try {
+        router.push("/(screens)/(home)/history");
+      } catch (error) {
+        console.error("Navigation error:", error);
       }
     }
-  };
+  }, []);
 
-  // Show loading while user data is being fetched
-  if (!isLoaded) {
-    return (
-      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="mt-4 text-gray-600">Loading...</Text>
-      </SafeAreaView>
-    );
-  }
+  const handleLocationUpdate = useCallback((location: LocationData) => {
+    setCurrentLocation(location);
+  }, []);
+
+  const handleLocationLoading = useCallback((loading: boolean) => {
+    setIsLoadingLocation(loading);
+  }, []);
 
   const handleWhereToPress = () => {
     try {
-      // Navigate to search screen with current location
       router.push({
         pathname: "/(screens)/(home)/search-input-field",
         params: {
@@ -201,19 +92,14 @@ export default function Index() {
   };
 
   const handleMyLocationPress = () => {
-    if (isLoadingLocation) return;
-
-    if (currentLocation && mapRef.current && isMounted) {
-      const region = {
-        latitude: currentLocation.coordinates.latitude,
-        longitude: currentLocation.coordinates.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-      mapRef.current.animateToRegion(region, 1000);
-    } else {
-      loadCurrentLocation();
+    if ((window as any).animateToCurrentLocation) {
+      (window as any).animateToCurrentLocation();
     }
+  };
+
+  const handleMenuPress = () => {
+    // Handle hamburger menu press
+    console.log("Menu pressed");
   };
 
   // Add safety check for rides data
@@ -221,39 +107,45 @@ export default function Index() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-1">
-        <View className="w-full rounded-2xl mb-4 overflow-hidden relative" style={{ minHeight: 400 }}>
-          <MapView
-            ref={mapRef}
-            style={{
-              width: "100%",
-              height: "100%",
-              minHeight: 400,
-            }}
-            provider={PROVIDER_GOOGLE}
-            region={mapRegion}
-            customMapStyle={lightIceBlueMapStyle}
-            showsUserLocation={true}
-            showsMyLocationButton={false}
-            showsCompass={true}
-            showsScale={true}
-            showsBuildings={true}
-            showsTraffic={false}
-            showsIndoors={true}
-            mapType="standard"
-            scrollEnabled={true}
-            zoomEnabled={true}
-            rotateEnabled={true}
-            pitchEnabled={true}
-            onRegionChange={handleRegionChange}
-            onMapReady={handleMapReady}
-          >
-            {/* Current Location Marker with safety check */}
-            {currentLocation && currentLocation.coordinates && <Marker coordinate={currentLocation.coordinates} title="Your Location" description={currentLocation.address} pinColor="#3B82F6" />}
-          </MapView>
-        </View>
+      {/* Map Layer - Bottom most */}
+      <View className="absolute inset-0">
+        <MapComponent onLocationUpdate={handleLocationUpdate} onLocationLoading={handleLocationLoading} />
       </View>
 
+      {/* Floating UI Elements - Above Map */}
+      <View className="absolute top-12 left-4 right-4 flex-row justify-between items-center">
+        {/* Hamburger Menu - Left */}
+        <TouchableOpacity
+          onPress={handleMenuPress}
+          className="bg-white rounded-full p-3 shadow-lg"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Menu size={24} color="#374151" />
+        </TouchableOpacity>
+
+        {/* My Location Button - Right */}
+        <TouchableOpacity
+          onPress={handleMyLocationPress}
+          className="bg-white rounded-full p-3 shadow-lg"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <MapPin size={24} color="#3B82F6" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Bottom Sheet - Above Map */}
       <CustomBottomSheet
         ref={bottomSheetRef}
         isVisible={isBottomSheetVisible}
@@ -299,9 +191,14 @@ export default function Index() {
           <TouchableOpacity onPress={handleWhereToPress} className="mx-4 mt-4 bg-gray-100 rounded-2xl p-4 flex-row items-center border border-gray-200" activeOpacity={0.7}>
             <Search size={20} color="#6B7280" />
             <Text className="ml-3 text-gray-500 flex-1 text-base">Where to?</Text>
-            {currentLocation && (
+            {currentLocation && !isLoadingLocation && (
               <View className="bg-green-100 px-2 py-1 rounded-full">
                 <Text className="text-green-700 text-xs font-medium">Location Ready</Text>
+              </View>
+            )}
+            {isLoadingLocation && (
+              <View className="bg-yellow-100 px-2 py-1 rounded-full">
+                <Text className="text-yellow-700 text-xs font-medium">Getting Location...</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -348,10 +245,6 @@ export default function Index() {
           </View>
         </View>
       </CustomBottomSheet>
-
-      {/* Sidebar Component */}
-      {/* {isMounted && <Sidebar isVisible={isSidebarVisible} onClose={handleSidebarClose} />} */}
     </SafeAreaView>
   );
-};
-
+}
