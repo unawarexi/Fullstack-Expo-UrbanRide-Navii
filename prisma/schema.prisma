@@ -150,7 +150,7 @@ model Vehicle {
   color           String
   plateNumber     String        @unique @map("plate_number")
   seats           Int           @db.SmallInt
-  imageUrl        String?       @map("image_url")
+  imageUrls        String[]     @map("image_urls") // Array of URLs for vehicle images (6 images)
   status          VehicleStatus @default(ACTIVE)
   insuranceExpiry DateTime?     @map("insurance_expiry")
   registrationExpiry DateTime?  @map("registration_expiry")
