@@ -89,6 +89,17 @@ declare interface PaymentProps {
   rideTime: number;
 }
 
+declare interface LocationCoordinate {
+  latitude: number;
+  longitude: number;
+}
+
+declare interface LocationData {
+  address: string;
+  coordinates: LocationCoordinate;
+  placeId?: string;
+}
+
 declare interface LocationStore {
   userLatitude: number | null;
   userLongitude: number | null;
@@ -96,8 +107,11 @@ declare interface LocationStore {
   destinationLatitude: number | null;
   destinationLongitude: number | null;
   destinationAddress: string | null;
-  setUserLocation: ({ latitude, longitude, address }: { latitude: number; longitude: number; address: string }) => void;
-  setDestinationLocation: ({ latitude, longitude, address }: { latitude: number; longitude: number; address: string }) => void;
+  userLocationData?: LocationData | null;
+  destinationLocationData?: LocationData | null;
+  setUserLocation: (params: { latitude: number; longitude: number; address: string; locationData?: LocationData }) => void;
+  setDestinationLocation: (params: { latitude: number; longitude: number; address: string; locationData?: LocationData }) => void;
+  clearLocations: () => void;
 }
 
 declare interface DriverStore {
@@ -182,4 +196,14 @@ declare interface Ride {
   user_id: string;
   created_at: string;
   driver: Driver;
+}
+
+declare interface PickedAsset {
+  uri: string;
+  type?: string;
+  fileName?: string;
+  mimeType?: string;
+  size?: number;
+  width?: number;
+  height?: number;
 }
