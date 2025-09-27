@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Navii",
+    "slug": "Navii",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/brand/logo3-Photoroom.png",
+    "scheme": "fullstackexpourbanridenavii",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.FullstackExpoUrbanRideNavii"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.FullstackExpoUrbanRideNavii"
+    },
+    
+    "web": {
+      "bundler": "metro",
+      "output": "server",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://api.clerk.com/"
+        }
+      ],
+      "expo-secure-store",
+       [
+         "react-native-maps",
+         {
+           "iosGoogleMapsApiKey": "AIzaSyBoWy2-vzkQzOw9FrCKUyfxWpa5_dsPi10",
+           "androidGoogleMapsApiKey": "AIzaSyBoWy2-vzkQzOw9FrCKUyfxWpa5_dsPi10"
+         }
+       ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
