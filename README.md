@@ -1,4 +1,4 @@
-# 🚗 AI-Powered Ride Hailing SuperApp
+# AI-Powered Ride Hailing SuperApp
 
 An intelligent, multi-role ride-hailing application that seamlessly connects **riders** and **drivers** in one app, powered by **AI**, **blockchain payments**, and a **microservices architecture**.  
 
@@ -6,7 +6,7 @@ The app ensures **speed, reliability, and security** through offline-first data 
 
 ---
 
-## 🌍 Overview
+## Overview
 
 This project is built as a **role-based React Native Expo app** with a **TypeScript Express.js backend**, using **Prisma ORM** and **NeonDB (PostgreSQL)** for scalable data management.
 
@@ -14,16 +14,16 @@ It combines traditional and blockchain payments, real-time event streaming, and 
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
-### 🖥️ Frontend
+### Frontend
 - **React Native (Expo, TypeScript)**
 - **Clerk** for authentication
 - **Redux Toolkit / Zustand** for state management
 - **AI Assistant SDK** for ride assistance and translation
 - **Offline-first storage** with SQLite / Hive
 
-### ⚙️ Backend
+### Backend
 - **Express.js (TypeScript)**
 - **Prisma ORM** + **Neon Postgres**
 - **Redis** for caching and queues
@@ -31,12 +31,12 @@ It combines traditional and blockchain payments, real-time event streaming, and 
 - **WebSockets / Socket.io** for real-time driver-rider communication
 - **Microservices** for ride, payment, AI, and notification modules
 
-### 💰 Payments
+### Payments
 - **Stripe, Apple Pay, Google Pay**
 - **Blockchain Wallets (BTC, SOL, USDT)** integrated via Web3.js / Ethers.js
 - **Chainlink** oracles for crypto rate verification
 
-### 🧠 AI Features
+### AI Features
 - Crash detection and emergency alerts  
 - Voice translation and in-ride communication  
 - AI assistant for booking, canceling, and scheduling rides  
@@ -50,20 +50,19 @@ It combines traditional and blockchain payments, real-time event streaming, and 
 
 ---
 
-## 🗺️ System Architecture
+##  System Architecture
 
 Below are the key architectural diagrams.  
-*(Add your visuals under each heading in column layout — not tables)*
 
-### 🧭 High-Level System Overview
-<p align="center">
-  <img src="./diagrams/vertical-structure.png" width="45%"/>
-  <img src="./diagrams/horizontal.png" width="45%"/>
-</p>
+###  High-Level System Overview
+
+  <img src="./diagrams/vertical-structure.png"/>
+  <img src="./diagrams/horizontal.png" />
+
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
