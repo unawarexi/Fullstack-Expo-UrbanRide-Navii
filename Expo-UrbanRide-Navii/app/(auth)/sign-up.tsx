@@ -7,12 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { z } from "zod";
 
-
-// Validation schema
+// Enhanced validation schema
 const signUpSchema = z
   .object({
     name: z
@@ -20,15 +19,20 @@ const signUpSchema = z
       .min(1, "Name is required")
       .min(2, "Name must be at least 2 characters")
       .max(50, "Name must be less than 50 characters")
-      .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
-    email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+      .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, apostrophes, and hyphens")
+      .refine((val) => val.trim().length >= 2, "Name must contain at least 2 non-space characters"),
+    email: z.string().min(1, "Email is required").email("Please enter a valid email address").toLowerCase(),
     password: z
       .string()
       .min(1, "Password is required")
       .min(8, "Password must be at least 8 characters")
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number"),
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one uppercase letter, one lowercase letter, and one number"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    phone: z.string().min(10, "Phone number is required").max(20, "Phone number too long"),
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .max(20, "Phone number is too long")
+      .regex(/^[\+]?[0-9\s\-\(\)]+$/, "Please enter a valid phone number"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -45,7 +49,6 @@ const SignUp = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [loading, setLoading] = useState(false);
 
   // Animation values
   const fadeAnim = useSharedValue(0);
@@ -53,7 +56,13 @@ const SignUp = () => {
   const scaleAnim = useSharedValue(0.9);
   const buttonScale = useSharedValue(1);
 
-  const {control, handleSubmit, formState: { errors }, setValue,} = useForm<SignUpFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       name: "",
@@ -78,34 +87,81 @@ const SignUp = () => {
   };
 
   // Handle submission of sign-up form
-  const onSignUpPress = async (data: any) => {
+  const onSignUpPress = async (data: SignUpFormData) => {
     if (isSubmitting) return;
 
+    // Button animation
     buttonScale.value = withSequence(withTiming(0.95, { duration: 100 }), withTiming(1, { duration: 100 }));
 
     setIsSubmitting(true);
-    setLoading(true);
+
     try {
-      await signUpWithEmail({ email: data.email, password: data.password });
+      // Validate and clean data
+      const cleanData = {
+        ...data,
+        name: data.name.trim(),
+        email: data.email.toLowerCase().trim(),
+        phone: data.phone.trim(),
+      };
+
+      // Attempt to create the account
+      await signUpWithEmail({
+        email: cleanData.email,
+        password: data.password,
+      });
+
       showToast("Verification code sent to your email!", "success");
 
+      // Navigate to OTP screen with cleaned data
       setTimeout(() => {
         router.push({
           pathname: "/otp",
           params: {
-            email: data.email,
-            name: data.name,
-            phone: data.phone,
+            email: cleanData.email,
+            name: cleanData.name,
+            phone: cleanData.phone,
           },
         });
       }, 1500);
     } catch (err: any) {
-      showToast(err.message, "error");
-      // Do not navigate to OTP on error
+      console.error("Sign up error:", err);
+
+      // Handle specific error cases
+      let errorMessage = "An error occurred. Please try again.";
+
+      if (err.message.includes("already exists") || err.message.includes("taken")) {
+        errorMessage = "This email is already registered. Please sign in or use a different email.";
+      } else if (err.message.includes("invalid email")) {
+        errorMessage = "Please enter a valid email address.";
+      } else if (err.message.includes("password")) {
+        errorMessage = "Password doesn't meet requirements. Please try a stronger password.";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      showToast(errorMessage, "error");
+
+      // Show sign-in option for existing users
+      if (errorMessage.includes("already registered")) {
+        setTimeout(() => {
+          Alert.alert("Account Exists", "This email is already registered. Would you like to sign in instead?", [
+            { text: "Cancel", style: "cancel" },
+            { text: "Sign In", onPress: () => router.push("/sign-in") },
+          ]);
+        }, 2000);
+      }
     } finally {
       setIsSubmitting(false);
-      setLoading(false);
     }
+  };
+
+  // Watch password for real-time validation feedback
+  const watchPassword = watch("password");
+  const passwordRequirements = {
+    length: watchPassword?.length >= 8,
+    uppercase: /[A-Z]/.test(watchPassword || ""),
+    lowercase: /[a-z]/.test(watchPassword || ""),
+    number: /\d/.test(watchPassword || ""),
   };
 
   // Animated styles
@@ -119,12 +175,8 @@ const SignUp = () => {
   }));
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 30} // tweak if header overlaps
-    >
-      <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" >
+    <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 30}>
+      <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View className="flex-1">
           {/* Header Section */}
           <View className="relative w-full h-[280px] bg-white">
@@ -136,7 +188,7 @@ const SignUp = () => {
             </Animated.View>
           </View>
 
-          <Animated.View style={containerAnimatedStyle} className="flex-1 bg-gray-50 -mt-6 ">
+          <Animated.View style={containerAnimatedStyle} className="flex-1 bg-gray-50 -mt-6">
             <View className="p-6 pt-8">
               {/* Form Section */}
               <View className="mb-3">
@@ -159,6 +211,7 @@ const SignUp = () => {
                           onChangeText={onChange}
                           onBlur={onBlur}
                           autoCapitalize="words"
+                          textContentType="name"
                         />
                       </View>
                       {errors.name && <Text className="text-red-500/70 text-sm mt-1 ml-1">{errors.name.message}</Text>}
@@ -187,6 +240,7 @@ const SignUp = () => {
                           keyboardType="email-address"
                           autoCapitalize="none"
                           textContentType="emailAddress"
+                          autoCorrect={false}
                         />
                       </View>
                       {errors.email && <Text className="text-red-500/70 text-sm mt-1 ml-1">{errors.email.message}</Text>}
@@ -213,7 +267,7 @@ const SignUp = () => {
                           onChangeText={onChange}
                           onBlur={onBlur}
                           keyboardType="phone-pad"
-                          autoCapitalize="none"
+                          textContentType="telephoneNumber"
                         />
                       </View>
                       {errors.phone && <Text className="text-red-500/70 text-sm mt-1 ml-1">{errors.phone.message}</Text>}
@@ -242,11 +296,26 @@ const SignUp = () => {
                           onBlur={onBlur}
                           autoCapitalize="none"
                           textContentType="newPassword"
+                          autoCorrect={false}
                         />
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -mt-3 p-1" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                           {showPassword ? <LucideIcons.eyecross size={20} color="#6B7280" /> : <LucideIcons.eye size={20} color="#6B7280" />}
                         </TouchableOpacity>
                       </View>
+
+                      {/* Password Requirements */}
+                      {watchPassword && watchPassword.length > 0 && (
+                        <View className="mt-2 ml-1">
+                          <Text className="text-xs text-gray-600 mb-1">Password must contain:</Text>
+                          <View className="flex-row flex-wrap">
+                            <Text className={`text-xs mr-3 ${passwordRequirements.length ? "text-green-600" : "text-gray-400"}`}> 8+ characters</Text>
+                            <Text className={`text-xs mr-3 ${passwordRequirements.uppercase ? "text-green-600" : "text-gray-400"}`}> Uppercase</Text>
+                            <Text className={`text-xs mr-3 ${passwordRequirements.lowercase ? "text-green-600" : "text-gray-400"}`}> Lowercase</Text>
+                            <Text className={`text-xs ${passwordRequirements.number ? "text-green-600" : "text-gray-400"}`}> Number</Text>
+                          </View>
+                        </View>
+                      )}
+
                       {errors.password && <Text className="text-red-500/70 text-sm mt-1 ml-1">{errors.password.message}</Text>}
                     </View>
                   )}
@@ -273,6 +342,7 @@ const SignUp = () => {
                           onBlur={onBlur}
                           autoCapitalize="none"
                           textContentType="newPassword"
+                          autoCorrect={false}
                         />
                         <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -mt-3 p-1" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                           {showConfirmPassword ? <LucideIcons.eyecross size={20} color="#6B7280" /> : <LucideIcons.eye size={20} color="#6B7280" />}
@@ -291,9 +361,10 @@ const SignUp = () => {
                 </TouchableOpacity>
               </Animated.View>
 
-              {loading && (
+              {isSubmitting && (
                 <View style={{ marginTop: 16, alignItems: "center" }}>
                   <ActivityIndicator size="large" color="#3B82F6" />
+                  <Text className="text-gray-600 text-sm mt-2">Setting up your account...</Text>
                 </View>
               )}
 
@@ -304,10 +375,10 @@ const SignUp = () => {
 
               {/* Sign In Link */}
               <View className="flex-row justify-center items-center mb-6">
-                <Text className="text-gray-600 font-Jakarta text-base">Already have an account? </Text>
+                <Text className="text-gray-600 font-Jakarta text-base">Already have an account?</Text>
                 <Link href="/sign-in" asChild>
                   <TouchableOpacity>
-                    <Text className="text-blue-600 font-JakartaBold text-base">Sign In</Text>
+                    <Text className="text-blue-600 font-JakartaBold text-base ml-1">Sign In</Text>
                   </TouchableOpacity>
                 </Link>
               </View>
@@ -316,16 +387,10 @@ const SignUp = () => {
         </View>
 
         {/* Toast Component */}
-        <Toast
-          visible={toastVisible}
-          message={toastMessage}
-          type={toastType}
-          onHide={() => setToastVisible(false)}
-        />
+        <Toast visible={toastVisible} message={toastMessage} type={toastType} onHide={() => setToastVisible(false)} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 export default SignUp;
-              

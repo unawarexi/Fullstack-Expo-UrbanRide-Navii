@@ -216,7 +216,7 @@ const HistoryRideDetails = () => {
               <View className="flex-row items-center mt-1">
                 <Star size={14} color="#FCD34D" fill="#FCD34D" />
                 <Text className="text-gray-600 ml-1">{ride.driver.rating}</Text>
-                <Text className="text-gray-400 mx-2">•</Text>
+                <Text className="text-gray-400 mx-2"></Text>
                 <Text className="text-gray-600">{ride.driver.car_seats} seats</Text>
               </View>
             </View>

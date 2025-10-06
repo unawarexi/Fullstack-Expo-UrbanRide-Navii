@@ -54,7 +54,7 @@ const MapResultsScreen = () => {
       estimatedTime: "5 min",
       capacity: 4,
       description: "Affordable everyday rides",
-      icon: "🚗",
+      icon: "",
     },
     {
       id: "comfort",
@@ -64,7 +64,7 @@ const MapResultsScreen = () => {
       estimatedTime: "3 min",
       capacity: 6,
       description: "More space and comfort",
-      icon: "🚙",
+      icon: "",
     },
     {
       id: "premium",
@@ -74,7 +74,7 @@ const MapResultsScreen = () => {
       estimatedTime: "2 min",
       capacity: 4,
       description: "Premium vehicles and service",
-      icon: "🖤",
+      icon: "",
     },
   ];
 
@@ -213,7 +213,7 @@ const MapResultsScreen = () => {
             <Text className="text-xl font-JakartaBold text-gray-900">Your Route</Text>
             {routeInfo && (
               <Text className="text-sm text-gray-600">
-                {routeInfo.distance.distance} • {routeInfo.distance.duration}
+                {routeInfo.distance.distance}  {routeInfo.distance.duration}
               </Text>
             )}
           </View>

@@ -1,4 +1,5 @@
 import InputField from "@/components/InputFields";
+import CalendarComponent from "@/components/presentation/calender";
 import { LucideIcons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import Toast from "@/core/utils/ToastNotifier";
@@ -79,6 +80,7 @@ export default function DriverRegisterForm()  {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [personalData, setPersonalData] = useState<PersonalInfoData | null>(null);
+  const [showLicenseCalendar, setShowLicenseCalendar] = useState(false);
   const driverStore = useDriverStore();
 
   // Animation values
@@ -240,7 +242,7 @@ export default function DriverRegisterForm()  {
           <View className="relative w-full h-[280px] bg-white">
             <Image source={images.signUpCar} className="w-full h-[280px]" resizeMode="cover" />
             <View className="absolute inset-0 bg-black/20" />
-            <Animated.View style={containerAnimatedStyle} className="absolute bottom-0 left-0 right-0 p-5 bg-black/60 mb-4 rounded-t-3xl">
+            <Animated.View style={containerAnimatedStyle} className="absolute bottom-0 left-0 right-0 p-5 bg-black/60 rounded-t-3xl">
               <Text className="text-xl text-white font-JakartaBold">{currentStep === 1 ? "Personal Information" : "Vehicle Information"}</Text>
               <Text className="text-md text-white/90 font-Jakarta">{currentStep === 1 ? "Step 1 of 2 - Enter your personal details" : "Step 2 of 2 - Add your vehicle details"}</Text>
             </Animated.View>
@@ -250,7 +252,7 @@ export default function DriverRegisterForm()  {
           <View className="px-6 py-4 bg-white">
             <View className="flex-row items-center justify-center">
               <View className="flex-row bg-gray-200 rounded-full p-1">
-                <Animated.View style={stepIndicatorStyle} className="absolute top-1 left-1 w-[120px] h-8 bg-blue-600 rounded-full" />
+                <Animated.View style={stepIndicatorStyle} className="absolute top-1 left-1 w-[100px] h-8 bg-blue-600 rounded-full" />
                 <TouchableOpacity onPress={() => setCurrentStep(1)} className="px-6 py-2 rounded-full z-10">
                   <Text className={`font-JakartaSemiBold text-sm ${currentStep === 1 ? "text-white" : "text-gray-600"}`}>Personal</Text>
                 </TouchableOpacity>
@@ -277,13 +279,46 @@ export default function DriverRegisterForm()  {
                     )}
                   />
 
+                  {/* License Expiry Date with Custom Calendar */}
                   <Controller
                     control={personalForm.control}
                     name="licenseExpiry"
-                    render={({ field: { onChange, onBlur, value } }) => (
+                    render={({ field: { onChange, value } }) => (
                       <View className="mb-4">
-                        <InputField label="License Expiry Date" icon={LucideIcons.calendar} placeholder="YYYY-MM-DD" value={value} onChangeText={onChange} onBlur={onBlur} />
+                        <Text className="text-base font-JakartaSemiBold text-gray-800 mb-3">License Expiry Date</Text>
+                        <TouchableOpacity
+                          onPress={() => setShowLicenseCalendar(true)}
+                          style={{
+                            backgroundColor: "#fff",
+                            borderColor: "#e5e7eb",
+                            borderWidth: 1,
+                            borderRadius: 16,
+                            paddingVertical: 16,
+                            paddingHorizontal: 16,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 2,
+                          }}
+                          activeOpacity={0.9}
+                        >
+                          <LucideIcons.calendar size={20} color="#6B7280" style={{ marginRight: 10 }} />
+                          <Text className={`text-base font-JakartaMedium ${value ? "text-gray-900" : "text-gray-400"}`}>
+                            {value ? value : "Select expiry date"}
+                          </Text>
+                        </TouchableOpacity>
                         {personalForm.formState.errors.licenseExpiry && <Text className="text-red-500/70 text-sm mt-1 ml-1">{personalForm.formState.errors.licenseExpiry.message}</Text>}
+                        {showLicenseCalendar && (
+                         
+                            <CalendarComponent
+                              selectedDate={value}
+                              onDateSelect={(date) => {
+                                onChange(date);
+                                setShowLicenseCalendar(false);
+                              }}
+                              minDate={new Date().toISOString().split("T")[0]}
+                            />
+                           
+                        )}
                       </View>
                     )}
                   />

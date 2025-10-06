@@ -23,7 +23,7 @@ export const useSocket = () => {
 
     const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
     if (!backendUrl) {
-      console.error("❌ EXPO_PUBLIC_BACKEND_URL not configured");
+      console.error(" EXPO_PUBLIC_BACKEND_URL not configured");
       return;
     }
 
@@ -42,19 +42,19 @@ export const useSocket = () => {
       });
 
       socketRef.current.on("connect", () => {
-        console.log("✅ Socket connected:", socketRef.current?.id);
+        console.log(" Socket connected:", socketRef.current?.id);
         setConnected(true);
         setSocketId(socketRef.current?.id);
       });
 
       socketRef.current.on("disconnect", (reason: string) => {
-        console.log("❌ Socket disconnected:", reason);
+        console.log(" Socket disconnected:", reason);
         setConnected(false);
         setSocketId(undefined);
       });
 
       socketRef.current.on("connect_error", (error: Error) => {
-        console.error("🔥 Socket connection error:", error);
+        console.error(" Socket connection error:", error);
         setConnected(false);
       });
     } catch (error) {

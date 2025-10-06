@@ -84,23 +84,23 @@ export default function OptionsScreen() {
           <Text className="text-3xl font-bold text-gray-900">Welcome!</Text>
         </Animated.View>
 
-        <Animated.View style={subtitleAnimatedStyle} className="items-center mb-16">
-          <Text className="text-lg text-gray-600 text-center leading-relaxed">Choose how you&apos;d like to continue your journey with us</Text>
+        <Animated.View style={subtitleAnimatedStyle} className="items-center mb-10">
+          <Text className="text-md text-gray-600 text-center leading-relaxed">Choose how you&apos;d like to continue your journey with us</Text>
         </Animated.View>
 
         {/* Options Section */}
-        <View className="space-y-4">
+        <View className="space-y-4 gap-4">
           {/* Continue as User */}
           <Animated.View entering={FadeInDown.delay(800).duration(600).springify()}>
             <AnimatedTouchableOpacity
               onPress={handleUserPress}
-              className="bg-white rounded-2xl p-6 flex-row items-center shadow-lg border border-gray-100"
+              className="bg-white rounded-2xl p-6 flex-row items-center border border-gray-100"
               style={{
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 8,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 4,
+                elevation: 2,
               }}
               activeOpacity={0.95}
             >
@@ -111,8 +111,9 @@ export default function OptionsScreen() {
                 <Text className="text-xl font-bold text-gray-900 mb-1">Continue as User</Text>
                 <Text className="text-gray-600">Book rides and travel with ease</Text>
               </View>
-              <View className="bg-blue-50 rounded-full p-2">
-                <Text className="text-blue-600 font-bold">→</Text>
+              <View className="bg-blue-50 rounded-full p-2 flex-row items-center">
+                {/* Forward icon */}
+                <LucideIcons.to size={20} color="#3B82F6" />
               </View>
             </AnimatedTouchableOpacity>
           </Animated.View>
@@ -121,13 +122,13 @@ export default function OptionsScreen() {
           <Animated.View entering={FadeInDown.delay(1000).duration(600).springify()}>
             <AnimatedTouchableOpacity
               onPress={handleDriverPress}
-              className="bg-white rounded-2xl p-6 flex-row items-center shadow-lg border border-gray-100"
+              className="bg-white rounded-2xl p-6 flex-row items-center border border-gray-100"
               style={{
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 8,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 4,
+                elevation: 2,
               }}
               activeOpacity={0.95}
             >
@@ -138,8 +139,9 @@ export default function OptionsScreen() {
                 <Text className="text-xl font-bold text-gray-900 mb-1">Register as Driver</Text>
                 <Text className="text-gray-600">Start earning by giving rides</Text>
               </View>
-              <View className="bg-green-50 rounded-full p-2">
-                <Text className="text-green-600 font-bold">→</Text>
+              <View className="bg-green-50 rounded-full p-2 flex-row items-center">
+                {/* Forward icon */}
+                <LucideIcons.to size={20} color="#10B981" />
               </View>
             </AnimatedTouchableOpacity>
           </Animated.View>
@@ -148,13 +150,13 @@ export default function OptionsScreen() {
           <Animated.View entering={FadeInDown.delay(1200).duration(600).springify()}>
             <AnimatedTouchableOpacity
               onPress={handleAdminPress}
-              className="bg-white rounded-2xl p-6 flex-row items-center shadow-lg border border-gray-100"
+              className="bg-white rounded-2xl p-6 flex-row items-center border border-gray-100"
               style={{
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 8,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 4,
+                elevation: 2,
               }}
               activeOpacity={0.95}
             >
@@ -165,8 +167,9 @@ export default function OptionsScreen() {
                 <Text className="text-xl font-bold text-gray-900 mb-1">Sign in as Admin</Text>
                 <Text className="text-gray-600">Manage platform operations</Text>
               </View>
-              <View className="bg-purple-50 rounded-full p-2">
-                <Text className="text-purple-600 font-bold">→</Text>
+              <View className="bg-purple-50 rounded-full p-2 flex-row items-center">
+                {/* Forward icon */}
+                <LucideIcons.to size={20} color="#8B5CF6" />
               </View>
             </AnimatedTouchableOpacity>
           </Animated.View>
@@ -177,11 +180,6 @@ export default function OptionsScreen() {
           <Text className="text-gray-500 text-sm text-center">You can always change your role later in settings</Text>
         </Animated.View>
       </View>
-
-      {/* Decorative Elements */}
-      <Animated.View entering={FadeInDown.delay(1600).duration(800)} className="absolute top-20 right-8 bg-blue-100 rounded-full w-20 h-20 opacity-20" />
-      <Animated.View entering={FadeInUp.delay(1800).duration(800)} className="absolute bottom-32 left-8 bg-green-100 rounded-full w-16 h-16 opacity-20" />
-      <Animated.View entering={FadeInDown.delay(2000).duration(800)} className="absolute top-1/3 left-4 bg-purple-100 rounded-full w-12 h-12 opacity-20" />
     </SafeAreaView>
   );
 }
