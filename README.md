@@ -42,7 +42,7 @@ It combines traditional and blockchain payments, real-time event streaming, and 
 - AI assistant for booking, canceling, and scheduling rides  
 - Edge AI models (TensorFlow Lite / ONNX) for low-latency inference  
 
-### 🧩 Architecture
+###  Architecture
 - **Clean Architecture** with **Feature-Layered structure**
 - **Hybrid consistency model** for offline-first design  
 - **Multi-region Active-Active Deployment** for scalability  
@@ -82,7 +82,7 @@ cd repo
 npm install
 
 # Run backend
-cd server && npm run dev
+cd backend folder && npm i && npm run dev
 
 # Start mobile app
-cd ../app && npx expo start
+cd frontend folder && npx expo start
